@@ -31,6 +31,16 @@ before_install:
     curl -L https://github.com/docker/compose/releases/download/1.6.2/docker-compose-`uname -s`-`uname -m` > docker-compose
     chmod +x docker-compose
     sudo mv docker-compose /usr/local/bin
+  # Make docker run in cloud
+  - |
+    #decrypt docker keys
+    openssl aes-256-cbc -K $encrypted_89d46c074134_key -iv $encrypted_89d46c074134_iv -in scripts/docker_keys.tar.enc -out scripts/docker_keys.tar -d
+
+    #make docker connect to the docker host using the decrypted keys by default
+    tar xvf scripts/docker_keys.tar -C scripts/
+    mkdir -pv ~/.docker
+    cp -v scripts/docker_keys/{ca,cert,key}.pem ~/.docker
+    export DOCKER_HOST=tcp://presto-docker.bounceme.net:2376 DOCKER_TLS_VERIFY=1
 
 install: ./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -q -T 2
 
