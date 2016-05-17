@@ -23,3 +23,8 @@ benchmark_outputs
 *.class
 .checkstyle
 .mvn/timing.properties
+
+#Private keys
+*.pem
+scripts/docker_keys*
+!scripts/docker_keys.tar.enc
