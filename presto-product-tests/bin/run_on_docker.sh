@@ -156,6 +156,28 @@ done
 # catch terminate signals
 trap terminate INT TERM EXIT
 
+# start presto-volumes container and copy the needed files
+docker-compose -f "${DOCKER_COMPOSE_LOCATION}" up -d presto-volumes
+VOLUMES_CONTAINER=`docker-compose -f "${DOCKER_COMPOSE_LOCATION}" ps -q presto-volumes`
+
+echo "`date`: started copying"
+
+docker cp ./presto-product-tests/conf $VOLUMES_CONTAINER:/docker/volumes/presto/presto-product-tests/
+docker cp ./presto-product-tests/bin $VOLUMES_CONTAINER:/docker/volumes/presto/presto-product-tests/
+docker cp ./presto-product-tests/target/classes/presto.env $VOLUMES_CONTAINER:/docker/volumes/presto/presto-product-tests/target/classes/presto.env
+docker cp ./presto-product-tests/target/presto-product-tests-${PRESTO_VERSION}-executable.jar $VOLUMES_CONTAINER:/docker/volumes/presto/presto-product-tests/target/presto-product-tests-${PRESTO_VERSION}-executable.jar
+
+docker cp ./presto-server/target/presto-server-${PRESTO_VERSION} $VOLUMES_CONTAINER:/docker/volumes/presto/presto-server/target/
+
+docker cp ./presto-cli/target/presto-cli-${PRESTO_VERSION}-executable.jar $VOLUMES_CONTAINER:/docker/volumes/presto/presto-cli/target/
+
+docker cp ./presto-product-tests/conf/presto/etc/environment-specific-catalogs/singlenode-kerberos-hdfs-impersonation/hive.properties $VOLUMES_CONTAINER:/docker/volumes/presto/presto-product-tests/conf/presto/etc/catalog/hive.properties
+
+docker cp ./presto-product-tests/conf/tempto/logging.properties $VOLUMES_CONTAINER:/docker/volumes/presto/presto-product-tests/conf/tempto/logging.properties
+docker cp ./presto-product-tests/conf/tempto/tempto-configuration-for-docker-kerberos.yaml $VOLUMES_CONTAINER:/docker/volumes/tempto/tempto-configuration-local.yaml
+
+echo "`date`: done copying"
+
 # start hadoop container
 docker-compose -f "${DOCKER_COMPOSE_LOCATION}" up -d hadoop-master
 
