@@ -210,6 +210,6 @@ set -e
 # execution finished successfully
 # disable trap, run cleanup manually
 trap - INT TERM EXIT
-cleanup
+#cleanup
 
 exit ${EXIT_CODE}
