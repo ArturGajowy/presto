@@ -232,6 +232,7 @@ docker exec ${HADOOP_MASTER_CONTAINER} killall ssh
 docker exec ${HADOOP_MASTER_CONTAINER} rpm -ivh http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
 docker exec ${HADOOP_MASTER_CONTAINER} yum install dante-server -y
 docker cp ${DOCKER_CONF_LOCATION}/files/sockd.conf ${HADOOP_MASTER_CONTAINER}:/etc/sockd.conf
+docker exec ${HADOOP_MASTER_CONTAINER} /etc/init.d/sockd start
 
 stop_unnecessary_hadoop_services
 
