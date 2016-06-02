@@ -223,6 +223,16 @@ HADOOP_LOGS_PID=$!
 
 # wait until hadoop processes is started
 retry check_hadoop
+
+#TODO this should be removed when we get teradatalabs/cdh5-hive to build again - it should be done during image build time
+#FIXME this does not work in Wireless-employee network!
+HADOOP_MASTER_CONTAINER=$(hadoop_master_container)
+docker exec ${HADOOP_MASTER_CONTAINER} supervisorctl stop socks-proxy
+docker exec ${HADOOP_MASTER_CONTAINER} killall ssh
+docker exec ${HADOOP_MASTER_CONTAINER} rpm -ivh http://pkgs.repoforge.org/rpmforge-release/rpmforge-release-0.5.3-1.el6.rf.x86_64.rpm
+docker exec ${HADOOP_MASTER_CONTAINER} yum install dante-server -y
+docker cp ${DOCKER_CONF_LOCATION}/files/sockd.conf ${HADOOP_MASTER_CONTAINER}:/etc/sockd.conf
+
 stop_unnecessary_hadoop_services
 
 # start presto containers
