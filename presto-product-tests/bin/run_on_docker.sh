@@ -174,6 +174,42 @@ stop_all_containers
 # catch terminate signals
 trap terminate INT TERM EXIT
 
+# start presto-volumes container and copy the needed files
+environment_docker_compose up -d presto-volumes
+VOLUMES_CONTAINER=`environment_docker_compose ps -q presto-volumes`
+
+echo "`date`: started copying"
+
+docker cp ${PRODUCT_TESTS_ROOT}/conf ${VOLUMES_CONTAINER}:${DOCKER_PRESTO_VOLUME}/presto-product-tests/
+docker cp ${PRODUCT_TESTS_ROOT}/bin ${VOLUMES_CONTAINER}:${DOCKER_PRESTO_VOLUME}/presto-product-tests/
+docker cp ${PRODUCT_TESTS_ROOT}/target/classes/presto.env \
+  ${VOLUMES_CONTAINER}:${DOCKER_PRESTO_VOLUME}/presto-product-tests/target/classes/
+docker cp ${PRODUCT_TESTS_ROOT}/target/presto-product-tests-${PRESTO_VERSION}-executable.jar \
+  ${VOLUMES_CONTAINER}:${DOCKER_PRESTO_VOLUME}/presto-product-tests/target/
+
+docker cp ./presto-server/target/presto-server-${PRESTO_VERSION} \
+  ${VOLUMES_CONTAINER}:${DOCKER_PRESTO_VOLUME}/presto-server/target/
+
+docker cp ./presto-cli/target/presto-cli-${PRESTO_VERSION}-executable.jar \
+  ${VOLUMES_CONTAINER}:${DOCKER_PRESTO_VOLUME}/presto-cli/target/
+
+HIVE_PROPERTIES_OVERRIDE=${PRODUCT_TESTS_ROOT}/conf/presto/etc/environment-specific-catalogs/${ENVIRONMENT}/hive.properties
+if [[ -f $HIVE_PROPERTIES_OVERRIDE ]]; then
+  docker cp $HIVE_PROPERTIES_OVERRIDE ${VOLUMES_CONTAINER}:${DOCKER_PRESTO_VOLUME}/presto-product-tests/conf/presto/etc/catalog/hive.properties
+fi
+
+docker cp ${PRODUCT_TESTS_ROOT}/conf/tempto/logging.properties \
+  ${VOLUMES_CONTAINER}:${DOCKER_PRESTO_VOLUME}/presto-product-tests/conf/tempto/logging.properties
+
+docker cp ${PRODUCT_TESTS_ROOT}/conf/tempto/tempto-configuration-for-docker-default.yaml \
+  ${VOLUMES_CONTAINER}:/docker/volumes/tempto/tempto-configuration-local.yaml
+if [[ $ENVIRONMENT == *"kerberos"* ]]; then
+  docker cp ${PRODUCT_TESTS_ROOT}/conf/tempto/tempto-configuration-for-docker-kerberos.yaml \
+    ${VOLUMES_CONTAINER}:/docker/volumes/tempto/tempto-configuration-local.yaml
+fi
+
+echo "`date`: done copying"
+
 # start hadoop container
 environment_docker_compose up -d hadoop-master
 

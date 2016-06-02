@@ -5,8 +5,15 @@ services:
     image: 'teradatalabs/centos6-java8-oracle:jdk1.8.0_92-80a011f'
     env_file:
       - ../../../target/classes/presto.env
+
+  presto-volumes:
+    image: 'busybox'
     volumes:
-      - ../../../../:/docker/volumes/presto
+      - /docker/volumes/presto/presto-product-tests
+      - /docker/volumes/presto/presto-product-tests/target/classes
+      - /docker/volumes/presto/presto-server/target/
+      - /docker/volumes/presto/presto-cli/target/
+      - /docker/volumes/tempto
 
   hadoop-master:
     extends:
@@ -21,17 +28,19 @@ services:
       - '10000:10000'
       - '50070:50070'
       - '50075:50075'
+    volumes_from:
+      - presto-volumes
 
   presto-master:
     extends:
       service: java-8-base
     hostname: presto-master
-    volumes:
-      - ../../../../presto-product-tests/conf/tempto/tempto-configuration-for-docker-default.yaml:/docker/volumes/tempto/tempto-configuration-local.yaml
     ports:
       - '8080:8080'
     depends_on:
-       - hadoop-master
+      - hadoop-master
+    volumes_from:
+      - presto-volumes
 
   application-runner:
     extends:
@@ -40,4 +49,4 @@ services:
     depends_on:
       - presto-master
     volumes_from:
-      - presto-master
+      - presto-volumes
