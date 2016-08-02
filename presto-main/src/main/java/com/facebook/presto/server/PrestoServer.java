@@ -88,6 +88,7 @@ public class PrestoServer
                 new NodeModule(),
                 new DiscoveryModule(),
                 new HttpServerModule(),
+                new WebjarsResourceModule(),
                 new JsonModule(),
                 new JaxrsModule(true),
                 new MBeanModule(),
