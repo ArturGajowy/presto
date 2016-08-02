@@ -376,9 +376,6 @@ public class ServerMainModule
         jsonBinder(binder).addSerializerBinding(Block.class).to(BlockJsonSerde.Serializer.class);
         jsonBinder(binder).addDeserializerBinding(Block.class).to(BlockJsonSerde.Deserializer.class);
 
-        // thread visualizer
-        jaxrsBinder(binder).bind(ThreadResource.class);
-
         // PageSorter
         binder.bind(PageSorter.class).to(PagesIndexPageSorter.class).in(Scopes.SINGLETON);
 
