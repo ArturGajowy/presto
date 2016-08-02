@@ -182,6 +182,13 @@
         </dependency>
 
         <dependency>
+            <groupId>org.webjars</groupId>
+            <artifactId>d3js</artifactId>
+            <version>3.4.4</version>
+            <scope>runtime</scope>
+        </dependency>
+
+        <dependency>
             <groupId>org.webjars.npm</groupId>
             <artifactId>dagre-d3</artifactId>
             <version>0.4.14</version>
@@ -349,7 +356,7 @@
                                 <argument>-DoutputDirectory=benchmark_outputs</argument>
                                 <argument>-Dmyproperty=myvalue</argument>
                                 <argument>-classpath</argument>
-                                <classpath />
+                                <classpath/>
                                 <argument>com.facebook.presto.benchmark.BenchmarkSuite</argument>
                             </arguments>
                             <classpathScope>test</classpathScope>
