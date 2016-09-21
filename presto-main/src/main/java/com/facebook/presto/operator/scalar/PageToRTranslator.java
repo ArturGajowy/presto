@@ -95,8 +95,8 @@ public class PageToRTranslator
         try {
             Slice[] slices = Arrays.stream(l).map(x -> Slices.utf8Slice(x)).toArray(size -> new Slice[size]);
             return new Page(new SliceArrayBlock(l.length, slices, true));
-        } catch (ClassCastException e)
-        {
+        }
+        catch (ClassCastException e) {
             e.printStackTrace();
             return null;
         }
