@@ -63,7 +63,7 @@ public class RcallOperator
         @Override
         public List<Type> getTypes()
         {
-            return sourceTypes;
+            return types;
         }
 
         @Override
@@ -95,7 +95,7 @@ public class RcallOperator
     private final Map<Symbol, Integer> sourceLayout;
     private Page outputPage = null;
     private final List<Symbol> params;
-    private final Type[] argumentsTypes;
+    private final List<Type> argumentsTypes;
     private final PageToRTranslator rcaller = new PageToRTranslator();
 
     public RcallOperator(OperatorContext operatorContext, List<Type> types, List<Type> sourceTypes, Map<Symbol, Integer> sourceLayout, String rProgram, List<Symbol> params)
@@ -107,10 +107,11 @@ public class RcallOperator
         this.rProgram = requireNonNull(rProgram, "rProgram can not be null");
         this.params = ImmutableList.copyOf(requireNonNull(params, "params can not be null"));
 
-        argumentsTypes = new Type[params.size()];
-        for (int i = 0; i < params.size(); ++i) {
-            argumentsTypes[i] = sourceTypes.get(i);
+        ImmutableList.Builder<Type> argumentTypes = ImmutableList.builder();
+        for (Symbol param : params) {
+            argumentTypes.add(sourceTypes.get(sourceLayout.get(param)));
         }
+        this.argumentsTypes = argumentTypes.build();
     }
 
     @Override
@@ -147,7 +148,7 @@ public class RcallOperator
     public void addInput(Page page)
     {
         Page argumentsPage = buildArgumentsPage(page);
-        Page rResultPage = rcaller.RCALL(rProgram, argumentsPage, VarcharType.createUnboundedVarcharType(), argumentsTypes);
+        Page rResultPage = rcaller.RCALL(rProgram, argumentsPage, VarcharType.createUnboundedVarcharType(), argumentsTypes.toArray(new Type[argumentsTypes.size()]));
         outputPage = buildResultPage(page, rResultPage);
     }
 

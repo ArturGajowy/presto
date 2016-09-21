@@ -28,15 +28,24 @@ import org.rosuda.REngine.Rserve.RserveException;
 
 import java.util.Arrays;
 
-import static com.facebook.presto.operator.scalar.RFunctions.getConnectionIgnoreException;
 import static java.lang.Double.doubleToRawLongBits;
 import static java.lang.Double.longBitsToDouble;
 
 public class PageToRTranslator
     implements AutoCloseable
 {
-    private final RConnection connection = getConnectionIgnoreException();
+    private final RConnection connection = getRConnection();
     private static final String[] varNames = {"x", "y", "z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
+
+    private static RConnection getRConnection()
+    {
+        try {
+            return new RConnection();
+        }
+        catch (RserveException e) {
+            throw Throwables.propagate(e);
+        }
+    }
 
     static double[] getDoubleColumn(Page p, int columnIndex)
     {

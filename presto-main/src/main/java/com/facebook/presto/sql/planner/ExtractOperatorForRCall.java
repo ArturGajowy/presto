@@ -118,11 +118,11 @@ public class ExtractOperatorForRCall
                 rewrittenAssigments.put(symbol, rewrittenAssigment);
             }
 
-            PlanNode sourceNodePointer = node.getSource();
+            PlanNode sourceNodePointer = nodeRewritten.getSource();
             for (Symbol rcallSymbol : rcalls.keySet()) {
                 FunctionCall rcallFunction = rcalls.get(rcallSymbol);
 
-                checkArgument(rcallFunction.getArguments().size() == 2, "Expected exactly 2 argument for R call");
+                checkArgument(rcallFunction.getArguments().size() >= 2, "At least 2 arguments are expected for the R call");
                 VarcharType varcharType = VarcharType.createUnboundedVarcharType();
                 Slice rcallProgram = (Slice) ExpressionInterpreter.evaluateConstantExpression(rcallFunction.getArguments().get(0), varcharType, metadata, session, emptyList());
 
@@ -130,7 +130,7 @@ public class ExtractOperatorForRCall
                 sourceNodePointer = new RcallNode(idAllocator.getNextId(), argumentsProjectNode.argumentsProjectNode, rcallProgram.toString(UTF_8), argumentsProjectNode.argumentsSymbols, rcallSymbol);
             }
 
-            return new ProjectNode(node.getId(), sourceNodePointer, rewrittenAssigments);
+            return new ProjectNode(nodeRewritten.getId(), sourceNodePointer, rewrittenAssigments);
         }
 
         private ArgumentsProjectNodeResult buildArgumentsProjectNode(FunctionCall rcallFunction, PlanNode rcallSourceNode)

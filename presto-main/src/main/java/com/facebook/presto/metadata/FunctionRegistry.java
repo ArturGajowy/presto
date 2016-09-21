@@ -89,7 +89,6 @@ import com.facebook.presto.operator.scalar.MapNotEqualOperator;
 import com.facebook.presto.operator.scalar.MapToMapCast;
 import com.facebook.presto.operator.scalar.MapValues;
 import com.facebook.presto.operator.scalar.MathFunctions;
-import com.facebook.presto.operator.scalar.RFunctions;
 import com.facebook.presto.operator.scalar.Re2JRegexpFunctions;
 import com.facebook.presto.operator.scalar.ScalarFunctionImplementation;
 import com.facebook.presto.operator.scalar.SequenceFunction;
@@ -476,7 +475,6 @@ public class FunctionRegistry
                 .scalar(MapConcatFunction.class)
                 .scalar(MapToMapCast.class)
                 .scalar(TypeOfFunction.class)
-                .scalar(RFunctions.class)
                 .functions(ZIP_FUNCTIONS)
                 .functions(ARRAY_JOIN, ARRAY_JOIN_WITH_NULL_REPLACEMENT)
                 .functions(ARRAY_TO_ARRAY_CAST, ARRAY_LESS_THAN)
@@ -564,6 +562,10 @@ public class FunctionRegistry
 
     public Signature resolveFunction(QualifiedName name, List<TypeSignature> parameterTypes, boolean approximate)
     {
+        if (name.getSuffix().equalsIgnoreCase("R")) {
+            return new Signature("R", FunctionKind.SCALAR, VarcharType.createUnboundedVarcharType().getTypeSignature(), parameterTypes);
+        }
+
         List<SqlFunction> allCandidates = functions.get(name).stream()
                 .filter(function -> function.getSignature().getKind() == SCALAR || (function.getSignature().getKind() == APPROXIMATE_AGGREGATE) == approximate)
                 .collect(toImmutableList());
@@ -841,6 +843,11 @@ public class FunctionRegistry
     {
         checkArgument(signature.getKind() == SCALAR, "%s is not a scalar function", signature);
         checkArgument(signature.getTypeVariableConstraints().isEmpty(), "%s has unbound type parameters", signature);
+
+        if (signature.getName().equalsIgnoreCase("R")) {
+            throw new IllegalArgumentException("R function calls must be replaced with the operator");
+        }
+
         Iterable<SqlFunction> candidates = functions.get(QualifiedName.of(signature.getName()));
         // search for exact match
         Type returnType = typeManager.getType(signature.getReturnType());

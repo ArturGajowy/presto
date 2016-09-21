@@ -1134,7 +1134,7 @@ public class LocalExecutionPlanner
         public PhysicalOperation visitRcall(RcallNode node, LocalExecutionPlanContext context)
         {
             PhysicalOperation source = node.getSource().accept(this, context);
-            List<Type> sourceTypes = getSourceOperatorTypes(node, context.getTypes());
+            List<Type> sourceTypes = getSourceOperatorTypes(node.getSource(), context.getTypes());
 
             OperatorFactory operatorFactory = new RcallOperator.RcallOperatorFactory(
                     context.getNextOperatorId(),
