@@ -18,6 +18,7 @@ import com.facebook.presto.spi.block.Block;
 import com.facebook.presto.spi.block.LongArrayBlock;
 import com.facebook.presto.spi.block.SliceArrayBlock;
 import com.facebook.presto.spi.type.Type;
+import com.google.common.base.Throwables;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import org.rosuda.REngine.REXPMismatchException;
@@ -98,8 +99,7 @@ public class PageToRTranslator
             return new Page(new SliceArrayBlock(l.length, slices, true));
         }
         catch (ClassCastException e) {
-            e.printStackTrace();
-            return null;
+            throw Throwables.propagate(e);
         }
     }
 
@@ -151,13 +151,8 @@ public class PageToRTranslator
             return callAndPack(call, returnType);
         }
         catch (RserveException e) {
-            e.printStackTrace();
+            throw Throwables.propagate(e);
         }
-        catch (REngineException e) {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
     private void assignVariables(Type[] types, Object[] args)
@@ -180,7 +175,7 @@ public class PageToRTranslator
             }
         }
         catch (REngineException e) {
-            e.printStackTrace();
+            throw Throwables.propagate(e);
         }
     }
 
@@ -212,13 +207,9 @@ public class PageToRTranslator
                     throw new RuntimeException("Types other then VARCHAR, BIGINT, DOUBLE are not supported in RCALL.");
             }
         }
-        catch (REngineException e) {
-            e.printStackTrace();
+        catch (REngineException | REXPMismatchException e) {
+            throw Throwables.propagate(e);
         }
-        catch (REXPMismatchException e) {
-            e.printStackTrace();
-        }
-        return null;
     }
 
     @Override

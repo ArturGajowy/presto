@@ -18,6 +18,7 @@ import com.facebook.presto.spi.function.ScalarFunction;
 import com.facebook.presto.spi.function.SqlType;
 import com.facebook.presto.spi.function.TypeParameter;
 import com.facebook.presto.spi.type.StandardTypes;
+import com.google.common.base.Throwables;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
 import org.rosuda.REngine.REXP;
@@ -46,14 +47,9 @@ public final class RFunctions
             connection.close();
             return Slices.wrappedBuffer(x.asString().getBytes());
         }
-        catch (RserveException e) {
-            e.printStackTrace();
+        catch (RserveException | REXPMismatchException e) {
+            throw Throwables.propagate(e);
         }
-        catch (REXPMismatchException e) {
-            e.printStackTrace();
-        }
-
-        return Slices.wrappedBuffer("".getBytes());
     }
 
     @SqlType(StandardTypes.VARCHAR)
@@ -78,18 +74,9 @@ public final class RFunctions
             double[] result = connection.eval("fun(x)").asDoubles();
             return Slices.wrappedBuffer(Double.toString(result[0]).getBytes());
         }
-        catch (RserveException e) {
-            e.printStackTrace();
+        catch (REXPMismatchException | REngineException e) {
+            throw Throwables.propagate(e);
         }
-        catch (REXPMismatchException e) {
-            e.printStackTrace();
-        }
-        catch (REngineException e) {
-            e.printStackTrace();
-        }
-
-        String result = "xxx";
-        return Slices.wrappedBuffer(result.getBytes());
     }
 
     @SqlType(StandardTypes.VARCHAR)
@@ -106,8 +93,7 @@ public final class RFunctions
             return new RConnection();
         }
         catch (RserveException e) {
-            e.printStackTrace();
+            throw Throwables.propagate(e);
         }
-        return null;
     }
 }

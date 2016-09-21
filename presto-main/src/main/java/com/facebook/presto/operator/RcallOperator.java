@@ -16,9 +16,7 @@ package com.facebook.presto.operator;
 
 import com.facebook.presto.operator.scalar.PageToRTranslator;
 import com.facebook.presto.spi.Page;
-import com.facebook.presto.spi.PageBuilder;
 import com.facebook.presto.spi.block.Block;
-import com.facebook.presto.spi.block.BlockBuilder;
 import com.facebook.presto.spi.type.Type;
 import com.facebook.presto.spi.type.VarcharType;
 import com.facebook.presto.sql.planner.Symbol;
@@ -26,8 +24,6 @@ import com.facebook.presto.sql.planner.plan.PlanNodeId;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import io.airlift.slice.Slice;
-import io.airlift.slice.Slices;
 
 import java.util.List;
 import java.util.Map;
@@ -191,17 +187,5 @@ public class RcallOperator
             throws Exception
     {
         rcaller.close();
-    }
-
-    Page RCALL(String rCode, Page page, Type returnType, Type[] types)
-    {
-        PageBuilder pb = new PageBuilder(ImmutableList.of(VarcharType.createUnboundedVarcharType()));
-        pb.declarePositions(page.getPositionCount());
-        for (int i = 0; i < page.getPositionCount(); ++i) {
-            Slice slice = Slices.utf8Slice(String.valueOf(i));
-            BlockBuilder blockBuilder = pb.getBlockBuilder(0);
-            blockBuilder.writeBytes(slice, 0, slice.length()).closeEntry();
-        }
-        return pb.build();
     }
 }
