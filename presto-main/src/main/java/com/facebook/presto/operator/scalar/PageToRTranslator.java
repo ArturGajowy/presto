@@ -32,6 +32,7 @@ import static java.lang.Double.doubleToRawLongBits;
 import static java.lang.Double.longBitsToDouble;
 
 public class PageToRTranslator
+    implements AutoCloseable
 {
     private final RConnection connection = getConnectionIgnoreException();
     private static final String[] varNames = {"x", "y", "z", "a", "b", "c", "d", "e", "f", "g", "h", "i", "j"};
@@ -218,5 +219,12 @@ public class PageToRTranslator
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public void close()
+            throws Exception
+    {
+        closeConnection();
     }
 }

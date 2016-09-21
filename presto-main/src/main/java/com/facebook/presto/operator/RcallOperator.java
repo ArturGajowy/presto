@@ -186,6 +186,13 @@ public class RcallOperator
         return ret;
     }
 
+    @Override
+    public void close()
+            throws Exception
+    {
+        rcaller.close();
+    }
+
     Page RCALL(String rCode, Page page, Type returnType, Type[] types)
     {
         PageBuilder pb = new PageBuilder(ImmutableList.of(VarcharType.createUnboundedVarcharType()));
