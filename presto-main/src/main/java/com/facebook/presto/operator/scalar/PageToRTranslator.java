@@ -282,14 +282,28 @@ public class PageToRTranslator
         try {
             switch (returnType.getTypeSignature().getBase().toUpperCase()) {
                 case "VARCHAR":
-                    return getReturnPage(connection.eval(call).asStrings());
+                    return getReturnPage(evalParseError(call).asStrings());
                 case "BIGINT":
-                    return getReturnPage(connection.eval(call).asIntegers());
+                    return getReturnPage(evalParseError(call).asIntegers());
                 case "DOUBLE":
-                    return getReturnPage(connection.eval(call).asDoubles());
+                    return getReturnPage(evalParseError(call).asDoubles());
                 default:
                     throw new RuntimeException("Types other then VARCHAR, BIGINT, DOUBLE are not supported in RCALL.");
             }
+        }
+        catch (REXPMismatchException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    private REXP evalParseError(String call)
+    {
+        try {
+            REXP response = connection.parseAndEval("try(eval(" + call + "),silent=TRUE)");
+            if (response.inherits("try-error")) {
+                throw new RuntimeException(response.asString());
+            }
+            return response;
         }
         catch (REngineException | REXPMismatchException e) {
             throw Throwables.propagate(e);
