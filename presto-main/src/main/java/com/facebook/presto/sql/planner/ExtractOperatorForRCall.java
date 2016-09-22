@@ -156,7 +156,7 @@ public class ExtractOperatorForRCall
         {
             List actualArguments = new ArrayList<>();
             for (int i = 1; i < rcallFunction.getArguments().size(); ++i) {
-                actualArguments.add(rcallFunction.getArguments().get(1));
+                actualArguments.add(rcallFunction.getArguments().get(i));
             }
             return actualArguments;
         }
