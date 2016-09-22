@@ -14,12 +14,12 @@
 package com.facebook.presto.operator.aggregation.state;
 
 import com.facebook.presto.spi.block.BlockBuilder;
-import com.facebook.presto.spi.function.AccumulatorState;
 import com.facebook.presto.spi.function.AccumulatorStateMetadata;
+import com.facebook.presto.spi.function.GroupedAccumulatorState;
 
 @AccumulatorStateMetadata(stateSerializerClass = RaggStateSerializer.class, stateFactoryClass = RaggStateFactory.class)
 public interface RaggState
-    extends AccumulatorState
+    extends GroupedAccumulatorState
 {
     void setCode(String code);
 

@@ -92,5 +92,15 @@ public class RaggStateFactory
             checkArgument(idx < 8);
             return blockBuilders.get(idx);
         }
+
+        @Override
+        public void setGroupId(long groupId)
+        {
+        }
+
+        @Override
+        public void ensureCapacity(long size)
+        {
+        }
     }
 }
