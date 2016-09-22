@@ -21,7 +21,11 @@ import com.facebook.presto.spi.type.Type;
 import com.google.common.base.Throwables;
 import io.airlift.slice.Slice;
 import io.airlift.slice.Slices;
+import org.rosuda.REngine.REXP;
+import org.rosuda.REngine.REXPDouble;
+import org.rosuda.REngine.REXPInteger;
 import org.rosuda.REngine.REXPMismatchException;
+import org.rosuda.REngine.REXPString;
 import org.rosuda.REngine.REngineException;
 import org.rosuda.REngine.Rserve.RConnection;
 import org.rosuda.REngine.Rserve.RserveException;
@@ -118,6 +122,12 @@ public class PageToRTranslator
         return processRCode(rCode, arguments, types, returnType);
     }
 
+    public Page RAGGREGATE(String rCode, Page input, Type returnType, Type[] types)
+    {
+        Object[] arguments = prepareArgumentsAsVectors(input, types);
+        return processRAggregate(rCode, arguments, types, returnType);
+    }
+
     public void closeConnection()
     {
         connection.close();
@@ -147,6 +157,30 @@ public class PageToRTranslator
         return arguments;
     }
 
+    static Object[] prepareArgumentsAsVectors(Page page, Type[] types)
+    {
+        Object[] arguments = new Object[types.length];
+        for (int i = 0; i < page.getBlocks().length; ++i) {
+            switch (types[i].getTypeSignature().getBase().toUpperCase()) {
+                case "VARCHAR":
+                    String[] s = getStringColumn(page, i);
+                    arguments[i] = new REXPString(s);
+                    break;
+                case "BIGINT":
+                    int[] l = getLongColumn(page, i);
+                    arguments[i] = new REXPInteger(l);
+                    break;
+                case "DOUBLE":
+                    double[] d = getDoubleColumn(page, i);
+                    arguments[i] = new REXPDouble(d);
+                    break;
+                default:
+                    throw new RuntimeException("Types other then VARCHAR, BIGINT, DOUBLE are not supported in RCALL.");
+            }
+        }
+        return arguments;
+    }
+
     synchronized Page processRCode(String rCode, Object[] args, Type[] types, Type returnType)
     {
         if (varNames.length < types.length) {
@@ -157,6 +191,23 @@ public class PageToRTranslator
             connection.eval(rCode);
             assignVariables(types, args);
             String call = collectFunCall(args.length);
+            return callAndPack(call, returnType);
+        }
+        catch (RserveException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    synchronized Page processRAggregate(String rCode, Object[] arguments, Type[] types, Type returnType)
+    {
+        if (varNames.length < types.length) {
+            throw new RuntimeException("Too many argumenst for RAGGREGATE");
+        }
+
+        try {
+            connection.eval(rCode);
+            assignVariableVectors(types, arguments);
+            String call = collectFunCall(arguments.length);
             return callAndPack(call, returnType);
         }
         catch (RserveException e) {
@@ -177,6 +228,30 @@ public class PageToRTranslator
                         break;
                     case "DOUBLE":
                         connection.assign(varNames[i], (double[]) args[i]);
+                        break;
+                    default:
+                        throw new RuntimeException("Types other then VARCHAR, BIGINT, DOUBLE are not supported in RCALL.");
+                }
+            }
+        }
+        catch (REngineException e) {
+            throw Throwables.propagate(e);
+        }
+    }
+
+    private void assignVariableVectors(Type[] types, Object[] args)
+    {
+        try {
+            for (int i = 0; i < args.length; ++i) {
+                switch (types[i].getTypeSignature().getBase().toUpperCase()) {
+                    case "VARCHAR":
+                        connection.assign(varNames[i], (REXP) args[i]);
+                        break;
+                    case "BIGINT":
+                        connection.assign(varNames[i], (REXP) args[i]);
+                        break;
+                    case "DOUBLE":
+                        connection.assign(varNames[i], (REXP) args[i]);
                         break;
                     default:
                         throw new RuntimeException("Types other then VARCHAR, BIGINT, DOUBLE are not supported in RCALL.");
