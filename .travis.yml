@@ -54,8 +54,7 @@ after_script:
     JOB_STATUS=$( [ "$TRAVIS_TEST_RESULT" == "0" ] && echo SUCCESS || echo FAILURE )
     JOB_ARTIFACTS_PATH_PREFIX=s3://${DEPLOY_S3_BUCKET}/travis_build_artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}/${TRAVIS_BUILD_NUMBER}/travis_jobs/${TRAVIS_JOB_NUMBER}-run
     JOB_RUN_ATTEMPTS=$( aws s3 ls ${JOB_ARTIFACTS_PATH_PREFIX} | wc -l | tr -d '[:space:]' )
-    aws s3 cp \
-      s3://archive.travis-ci.org/jobs/${TRAVIS_JOB_ID}/log.txt \
-      ${JOB_ARTIFACTS_PATH_PREFIX}-$((JOB_RUN_ATTEMPTS + 1))-${JOB_STATUS}/log.txt
+    wget https://api.travis-ci.org/jobs/${TRAVIS_JOB_ID}/log.txt?deansi=true -O /tmp/log.txt
+    aws s3 cp /tmp/log.txt ${JOB_ARTIFACTS_PATH_PREFIX}-$((JOB_RUN_ATTEMPTS + 1))-${JOB_STATUS}/log.txt
     set +x
   fi
