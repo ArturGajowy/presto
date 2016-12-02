@@ -113,3 +113,17 @@ deploy:
   local-dir: /tmp/artifacts
   upload-dir: travis_build_artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}/${TRAVIS_BUILD_NUMBER}
   acl: public_read
+
+after_script:
+- |
+  if [[ -v DEPLOY_S3_ACCESS_KEY ]]; then
+    sudo pip install awscli
+    export AWS_ACCESS_KEY_ID=${DEPLOY_S3_ACCESS_KEY}
+    export AWS_SECRET_ACCESS_KEY=${DEPLOY_S3_SECRET_KEY}
+    JOB_STATUS=$( [ "$TRAVIS_TEST_RESULT" == "0" ] && echo SUCCESS || echo FAILURE )
+    JOB_ARTIFACTS_PATH_PREFIX=s3://${DEPLOY_S3_BUCKET}/travis_build_artifacts/${TRAVIS_REPO_SLUG}/${TRAVIS_BRANCH}/${TRAVIS_BUILD_NUMBER}/travis_jobs/${TRAVIS_JOB_NUMBER}-run
+    JOB_RUN_ATTEMPTS=$( aws s3 ls ${JOB_ARTIFACTS_PATH_PREFIX} | wc -l | tr -d '[:space:]' )
+    aws s3 cp \
+      s3://archive.travis-ci.org/jobs/${TRAVIS_JOB_ID}/log.txt \
+      ${JOB_ARTIFACTS_PATH_PREFIX}-$((JOB_RUN_ATTEMPTS + 1))-${JOB_STATUS}/log.txt
+  fi
