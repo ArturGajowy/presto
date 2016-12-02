@@ -47,6 +47,7 @@ notifications:
 after_script:
 - |
   if [[ -v DEPLOY_S3_ACCESS_KEY ]]; then
+    set -x
     sudo pip install awscli
     export AWS_ACCESS_KEY_ID=${DEPLOY_S3_ACCESS_KEY}
     export AWS_SECRET_ACCESS_KEY=${DEPLOY_S3_SECRET_KEY}
@@ -56,4 +57,5 @@ after_script:
     aws s3 cp \
       s3://archive.travis-ci.org/jobs/${TRAVIS_JOB_ID}/log.txt \
       ${JOB_ARTIFACTS_PATH_PREFIX}-$((JOB_RUN_ATTEMPTS + 1))-${JOB_STATUS}/log.txt
+    set +x
   fi
