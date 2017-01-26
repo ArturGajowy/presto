@@ -24,36 +24,30 @@ import com.facebook.presto.sql.planner.plan.PlanNode;
 
 import java.util.Optional;
 
+import static com.facebook.presto.util.Optionals.cast;
+
 public class MergeLimitWithDistinct
-    implements Rule
+        implements Rule
 {
     @Override
     public Optional<PlanNode> apply(PlanNode node, Lookup lookup, PlanNodeIdAllocator idAllocator, SymbolAllocator symbolAllocator)
     {
-        if (!(node instanceof LimitNode)) {
-            return Optional.empty();
-        }
+        Optional<LimitNode> parent = cast(node, LimitNode.class);
 
-        LimitNode parent = (LimitNode) node;
+        Optional<AggregationNode> childDistinct = parent
+                .flatMap(p -> lookup.resolve(p.getSource(), AggregationNode.class))
+                .filter(this::isDistinct);
 
-        PlanNode input = lookup.resolve(parent.getSource());
-        if (!(input instanceof AggregationNode)) {
-            return Optional.empty();
-        }
-
-        AggregationNode child = (AggregationNode) input;
-
-        if (isDistinct(child)) {
-            return Optional.empty();
-        }
-
-        return Optional.of(
-                new DistinctLimitNode(
-                        parent.getId(),
-                        child.getSource(),
-                        parent.getCount(),
-                        false,
-                        child.getHashSymbol()));
+        return parent.flatMap(p ->
+                childDistinct.map(d ->
+                        new DistinctLimitNode(
+                                p.getId(),
+                                d.getSource(),
+                                p.getCount(),
+                                false,
+                                d.getHashSymbol())
+                )
+        );
     }
 
     /**
